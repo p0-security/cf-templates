@@ -100,12 +100,6 @@ aws cloudformation delete-stack \
   --region us-west-2
 ```
 
-##### Delete Admin and Exec Roles:
-```
-aws cloudformation delete-stack \
-  --stack-name StackSetAdminRoleStack
-```
-
 ##### Delete Stack Instances:
 ```
 aws cloudformation delete-stack-instances \
@@ -119,4 +113,10 @@ aws cloudformation delete-stack-instances \
 ```
 aws cloudformation delete-stack-set \
     --stack-set-name ResourceExplorerIndexStackSet
+```
+
+##### Delete Admin and Exec Roles:
+```
+aws cloudformation delete-stack \
+  --stack-name StackSetAdminRoleStack
 ```

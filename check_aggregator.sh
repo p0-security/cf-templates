@@ -22,7 +22,7 @@ INDEX_DETAILS=$(aws resource-explorer-2 get-index --region us-west-2 --query '[A
 if [[ -z $INDEX_DETAILS ]]; then
   # No index exists in us-west-2; suggest creating a new AGGREGATOR index
   echo "No index found in us-west-2. Recommended action:"
-  echo "Create a new LOCAL index in us-west-2 and then upgrade to an AGGREGATOR using 'promote-index-to-aggregator.json' CloudFormation template."
+  echo "Create a new AGGREGATOR index in us-west-2"
 else
   # Parse existing index details
   IFS=$'\t' read -r INDEX_ARN INDEX_TYPE INDEX_STATE <<< "$INDEX_DETAILS"
@@ -30,7 +30,7 @@ else
   if [[ $INDEX_STATE == "DELETED" ]]; then
     # Index is deleted; suggest creating a new AGGREGATOR index
     echo "An index exists in us-west-2 but is in the DELETED state. Recommended action:"
-    echo "Create a new LOCAL index in us-west-2 and then upgrade to an AGGREGATOR using 'promote-index-to-aggregator.json' CloudFormation template."
+    echo "Create a new AGGREGATOR index in us-west-2"
   elif [[ $INDEX_TYPE == "AGGREGATOR" ]]; then
     # Aggregator index already exists in us-west-2
     echo "An AGGREGATOR index already exists in us-west-2: $INDEX_ARN"
@@ -38,6 +38,6 @@ else
   else
     # LOCAL index exists and is active; suggest promoting to AGGREGATOR
     echo "A LOCAL index exists in us-west-2: $INDEX_ARN. Recommended action:"
-    echo "Promote the existing index to AGGREGATOR using the 'promote-index-to-aggregator.json' CloudFormation template."
+    echo "Promote the existing index to AGGREGATOR."
   fi
 fi
