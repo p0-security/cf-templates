@@ -1,0 +1,26 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Create a Resource Explorer View and associate it as the default view.
+
+Parameters:
+  AggregatorRegion:
+    Type: String
+    Description: The region where the aggregator index exists.
+    Default: us-west-2
+
+Resources:
+  ResourceExplorerView:
+    Type: 'AWS::ResourceExplorer2::View'
+    Properties:
+      ViewName: all-resources-p0
+      IncludedProperties:
+        - Name: tags
+
+  DefaultViewAssociation:
+    Type: 'AWS::ResourceExplorer2::DefaultViewAssociation'
+    Properties:
+      ViewArn: !GetAtt ResourceExplorerView.ViewArn
+
+Outputs:
+  ViewArn:
+    Description: The ARN of the Resource Explorer View.
+    Value: !GetAtt ResourceExplorerView.ViewArn

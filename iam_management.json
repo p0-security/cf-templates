@@ -1,0 +1,250 @@
+{
+  "AWSTemplateFormatVersion": "2010-09-09",
+  "Parameters": {
+    "GoogleAudienceId": {
+      "Type": "String",
+      "Description": "Google Audience ID for SAML federation."
+    },
+    "AwsAccountId": {
+      "Type": "String",
+      "Description": "AWS Account ID"
+    }
+  },
+  "Resources": {
+    "P0RoleIamManager": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "RoleName": "P0RoleIamManager",
+        "AssumeRolePolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Effect": "Allow",
+              "Principal": {
+                "Federated": "accounts.google.com"
+              },
+              "Action": "sts:AssumeRoleWithWebIdentity",
+              "Condition": {
+                "StringEquals": {
+                  "accounts.google.com:aud": { "Ref": "GoogleAudienceId" }
+                }
+              }
+            }
+          ]
+        },
+        "Tags": [
+          {
+            "Key": "P0Security",
+            "Value": {
+              "Fn::Sub": "Created using CloudFormation by ${AwsAccountId}"
+            }
+          }
+        ]
+      }
+    },
+    "P0RoleIamManagerPolicy": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyName": "P0RoleIamManagerPolicy",
+        "Roles": [
+          {
+            "Ref": "P0RoleIamManager"
+          }
+        ],
+        "PolicyDocument": {
+          "Version": "2012-10-17",
+          "Statement": [
+            {
+              "Sid": "P0CanGetAndListPolicies",
+              "Effect": "Allow",
+              "Action": [
+                "iam:GetPolicy",
+                "iam:GetPolicyVersion",
+                "iam:ListPolicyTags",
+                "iam:ListPolicyVersions"
+              ],
+              "Resource": "*"
+            },
+            {
+              "Sid": "P0CanManagePoliciesAndListResources",
+              "Effect": "Allow",
+              "Action": [
+                "account:ListRegions",
+                "iam:AddUserToGroup",
+                "iam:AttachRolePolicy",
+                "iam:AttachUserPolicy",
+                "iam:CreatePolicy",
+                "iam:CreatePolicyVersion",
+                "iam:DeletePolicy",
+                "iam:DeletePolicyVersion",
+                "iam:DeleteRole",
+                "iam:DeleteRolePolicy",
+                "iam:DetachRolePolicy",
+                "iam:DetachUserPolicy",
+                "iam:GetRole",
+                "iam:GetRolePolicy",
+                "iam:GetSAMLProvider",
+                "iam:GetUser",
+                "iam:ListAccountAliases",
+                "iam:ListAttachedGroupPolicies",
+                "iam:ListAttachedRolePolicies",
+                "iam:ListAttachedUserPolicies",
+                "iam:ListGroupPolicies",
+                "iam:ListGroups",
+                "iam:ListGroupsForUser",
+                "iam:ListPolicies",
+                "iam:ListRolePolicies",
+                "iam:ListRoles",
+                "iam:ListUsers",
+                "iam:ListUserTags",
+                "iam:PutRolePolicy",
+                "iam:RemoveUserFromGroup",
+                "resource-explorer-2:ListIndexes",
+                "resource-explorer-2:Search",
+                "sagemaker:ListNotebookInstances"
+              ],
+              "Resource": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:ResourceAccount": { "Ref": "AwsAccountId" }
+                }
+              }
+            },
+            {
+              "Sid": "P0CanManageSshAccess",
+              "Effect": "Allow",
+              "Action": [
+                "ec2:DescribeTags",
+                "ssm:AddTagsToResource",
+                "ssm:GetDocument",
+                "ssm:DescribeInstanceInformation",
+                "ssm:DescribeSessions",
+                "ssm:GetCommandInvocation",
+                "ssm:ListCommandInvocations",
+                "ssm:TerminateSession"
+              ],
+              "Resource": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:ResourceAccount": { "Ref": "AwsAccountId" }
+                }
+              }
+            },
+            {
+              "Sid": "P0CanProvisionUserForSshAccess",
+              "Effect": "Allow",
+              "Action": "ssm:SendCommand",
+              "Resource": [
+                { "Fn::Sub": "arn:aws:ec2:*:${AwsAccountId}:instance/*" },
+                { "Fn::Sub": "arn:aws:ssm:*:${AwsAccountId}:document/P0ProvisionUserAccess" }
+              ]
+            },
+            {
+              "Sid": "P0CanManageKubernetesAccess",
+              "Effect": "Allow",
+              "Action": [
+                "eks:CreateAccessEntry",
+                "eks:DeleteAccessEntry",
+                "eks:DescribeAccessEntry",
+                "eks:UpdateAccessEntry"
+              ],
+              "Resource": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:ResourceAccount": { "Ref": "AwsAccountId" }
+                },
+                "ArnNotEquals": {
+                  "eks:principalArn": { "Fn::Sub": "arn:aws:iam::${AwsAccountId}:role/P0RoleIamManager" }
+                }
+              }
+            },
+            {
+              "Sid": "P0CanManageSsoAssignments",
+              "Effect": "Allow",
+              "Action": [
+                "iam:GetSAMLProvider",
+                "identitystore:ListUsers",
+                "sso:AttachCustomerManagedPolicyReferenceToPermissionSet",
+                "sso:AttachManagedPolicyToPermissionSet",
+                "sso:CreateAccountAssignment",
+                "sso:CreatePermissionSet",
+                "sso:DeleteAccountAssignment",
+                "sso:DeletePermissionSet",
+                "sso:DescribeAccountAssignmentCreationStatus",
+                "sso:DescribeAccountAssignmentDeletionStatus",
+                "sso:DescribePermissionSet",
+                "sso:DescribePermissionSetProvisioningStatus",
+                "sso:GetInlinePolicyForPermissionSet",
+                "sso:ListAccountAssignments",
+                "sso:ListInstances",
+                "sso:ListManagedPoliciesInPermissionSet",
+                "sso:ListCustomerManagedPolicyReferencesInPermissionSet",
+                "sso:ListPermissionSets",
+                "sso:ListTagsForResource",
+                "sso:ProvisionPermissionSet",
+                "sso:PutInlinePolicyToPermissionSet"
+              ],
+              "Resource": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:ResourceAccount": { "Ref": "AwsAccountId" }
+                }
+              }
+            },
+            {
+              "Sid": "P0CanCreateSsoRolesOnly",
+              "Effect": "Allow",
+              "Action": "iam:CreateRole",
+              "Resource": {
+                "Fn::Sub": "arn:aws:iam::${AwsAccountId}:role/aws-reserved/sso.amazonaws.com/*"
+              }
+            },
+            {
+              "Sid": "P0CanTagPoliciesAndRoles",
+              "Effect": "Allow",
+              "Action": [
+                "iam:CreatePolicy",
+                "iam:TagPolicy"
+              ],
+              "Resource": "*",
+              "Condition": {
+                "StringEquals": {
+                  "aws:RequestTag/P0Security": "Managed by P0",
+                  "aws:ResourceAccount": { "Ref": "AwsAccountId" }
+                }
+              }
+            },
+            {
+              "Sid": "P0CanNotAlterItsOwnRole",
+              "Effect": "Deny",
+              "Action": [
+                "iam:AttachRole*",
+                "iam:DeleteRole*",
+                "iam:DetachRole*",
+                "iam:PutRole*",
+                "iam:TagRole",
+                "iam:UntagRole",
+                "iam:UpdateRole*"
+              ],
+              "Resource": { "Fn::Sub": "arn:aws:iam::${AwsAccountId}:role/P0RoleIamManager" }
+            },
+            {
+              "Sid": "P0CanNotCreateSshUserProvisioningDocument",
+              "Effect": "Deny",
+              "Action": [
+                "ssm:CreateDocument"
+              ],
+              "Resource": { "Fn::Sub": "arn:aws:ssm:*:${AwsAccountId}:document/P0ProvisionUserAccess" }
+            },
+            {
+              "Sid": "P0CanNotAssumeRoles",
+              "Effect": "Deny",
+              "Action": "sts:AssumeRole",
+              "Resource": "*"
+            }
+          ]
+        }
+      }
+    }
+  }
+}
