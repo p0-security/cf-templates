@@ -8,8 +8,11 @@ Please copy the current directory to your local instance and execute the followi
 ## Create IAMRole stack
 
 ```
-aws cloudformation create-stack --stack-name P0IamRoleStack --template-body "file://$(pwd)/iam_management.yaml" --capabilities CAPABILITY_NAMED_IAM \
---parameter-overrides GoogleAudienceId=<p0-google-aud-id> AwsAccountId=<aws-account-id>
+aws cloudformation create-stack --stack-name P0IamRoleStack --template-body "file://$(pwd)/iam_management.json" \
+--capabilities CAPABILITY_NAMED_IAM \
+--parameters \
+    ParameterKey=GoogleAudienceId,ParameterValue=<p0-google-aud-id> \
+    ParameterKey=AwsAccountId,ParameterValue=<aws-account-id>;
 ```
 
 #### Cleanup (Only if required):
