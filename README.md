@@ -5,20 +5,47 @@ Please copy the current directory to your local instance and execute the followi
 
 # Step 1:   Create P0-IAMRole
 
-## Create IAMRole stack
+## Create IAMRole stack-set
+
+1. Deploy the `iam_management.json` template as a stackset via the Management/Parent account across all children accounts. 
+  a. Pick all the children accounts to deploy the Role to. [Note: this will not get deployed in the management account]
+  b. Pick any one region to deploy the stack to. 
+
+2. Deploy the `iam_management.json` template as a stack just for the Management account. 
+
+
+Commands to deploy it across all children accounts: 
+```
+aws cloudformation create-stack-set \
+  --stack-set-name P0IamRoleStackSet \
+  --template-body file://iam_management.json \
+  --parameters ParameterKey=GoogleAudienceId,ParameterValue=<your-google-audience-id> \
+  --capabilities CAPABILITY_NAMED_IAM \
+  --permission-model SERVICE_MANAGED \
+  --auto-deployment Enabled=true,RetainStacksOnAccountRemoval=false
+```
 
 ```
-aws cloudformation create-stack --stack-name P0IamRoleStack --template-body "file://$(pwd)/iam_management.json" \
---capabilities CAPABILITY_NAMED_IAM \
---parameters \
-    ParameterKey=GoogleAudienceId,ParameterValue=<p0-google-aud-id> \
-    ParameterKey=AwsAccountId,ParameterValue=<aws-account-id>;
+aws cloudformation create-stack-instances \
+  --stack-set-name P0IamRoleStackSet \
+  --deployment-targets AccountIds='["111122223333","444455556666","777788889999"]' \
+  --regions us-west-2
 ```
 
 #### Cleanup (Only if required):
 
 ```
-aws cloudformation delete-stack --stack-name P0IamRoleStack
+aws cloudformation delete-stack-instances \
+  --stack-set-name P0IamRoleStackSet \
+  --regions us-east-1 \
+  --deployment-targets AccountIds='["123456789012","234567890123","345678901234"]' \
+  --no-retain-stacks \
+  --operation-preferences FailureToleranceCount=1,MaxConcurrentCount=2
+```
+
+```
+aws cloudformation delete-stack-set \
+  --stack-set-name P0IamRoleStackSet
 ```
 
 # Step 2: Create aggregator index
@@ -88,7 +115,16 @@ aws cloudformation deploy \
   --region us-west-2
 ```
 
-
+## F. Create a new role that allows referencing the indexes
+```
+aws cloudformation deploy \
+  --template-file Iam_resource_lister.yaml \
+  --stack-name P0RoleIamResourceListerStack \
+  --capabilities CAPABILITY_NAMED_IAM \
+  --parameter-overrides \
+    GoogleAudienceId=<goog-aud-id> \
+    TargetAccountId=<aws-acccount-id>
+```
 
 
 #### Cleanup (only if required):

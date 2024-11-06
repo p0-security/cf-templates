@@ -4,10 +4,6 @@
     "GoogleAudienceId": {
       "Type": "String",
       "Description": "Google Audience ID for SAML federation."
-    },
-    "AwsAccountId": {
-      "Type": "String",
-      "Description": "AWS Account ID"
     }
   },
   "Resources": {
@@ -36,7 +32,7 @@
           {
             "Key": "P0Security",
             "Value": {
-              "Fn::Sub": "Created using CloudFormation by ${AwsAccountId}"
+              "Fn::Sub": "Created using CloudFormation by ${AWS::AccountId}"
             }
           }
         ]
@@ -106,7 +102,7 @@
               "Resource": "*",
               "Condition": {
                 "StringEquals": {
-                  "aws:ResourceAccount": { "Ref": "AwsAccountId" }
+                  "aws:ResourceAccount": { "Ref": "AWS::AccountId" }
                 }
               }
             },
@@ -126,7 +122,7 @@
               "Resource": "*",
               "Condition": {
                 "StringEquals": {
-                  "aws:ResourceAccount": { "Ref": "AwsAccountId" }
+                  "aws:ResourceAccount": { "Ref": "AWS::AccountId" }
                 }
               }
             },
@@ -135,8 +131,8 @@
               "Effect": "Allow",
               "Action": "ssm:SendCommand",
               "Resource": [
-                { "Fn::Sub": "arn:aws:ec2:*:${AwsAccountId}:instance/*" },
-                { "Fn::Sub": "arn:aws:ssm:*:${AwsAccountId}:document/P0ProvisionUserAccess" }
+                { "Fn::Sub": "arn:aws:ec2:*:${AWS::AccountId}:instance/*" },
+                { "Fn::Sub": "arn:aws:ssm:*:${AWS::AccountId}:document/P0ProvisionUserAccess" }
               ]
             },
             {
@@ -151,10 +147,10 @@
               "Resource": "*",
               "Condition": {
                 "StringEquals": {
-                  "aws:ResourceAccount": { "Ref": "AwsAccountId" }
+                  "aws:ResourceAccount": { "Ref": "AWS::AccountId" }
                 },
                 "ArnNotEquals": {
-                  "eks:principalArn": { "Fn::Sub": "arn:aws:iam::${AwsAccountId}:role/P0RoleIamManager" }
+                  "eks:principalArn": { "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:role/P0RoleIamManager" }
                 }
               }
             },
@@ -187,7 +183,7 @@
               "Resource": "*",
               "Condition": {
                 "StringEquals": {
-                  "aws:ResourceAccount": { "Ref": "AwsAccountId" }
+                  "aws:ResourceAccount": { "Ref": "AWS::AccountId" }
                 }
               }
             },
@@ -196,7 +192,7 @@
               "Effect": "Allow",
               "Action": "iam:CreateRole",
               "Resource": {
-                "Fn::Sub": "arn:aws:iam::${AwsAccountId}:role/aws-reserved/sso.amazonaws.com/*"
+                "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:role/aws-reserved/sso.amazonaws.com/*"
               }
             },
             {
@@ -210,7 +206,7 @@
               "Condition": {
                 "StringEquals": {
                   "aws:RequestTag/P0Security": "Managed by P0",
-                  "aws:ResourceAccount": { "Ref": "AwsAccountId" }
+                  "aws:ResourceAccount": { "Ref": "AWS::AccountId" }
                 }
               }
             },
@@ -226,7 +222,7 @@
                 "iam:UntagRole",
                 "iam:UpdateRole*"
               ],
-              "Resource": { "Fn::Sub": "arn:aws:iam::${AwsAccountId}:role/P0RoleIamManager" }
+              "Resource": { "Fn::Sub": "arn:aws:iam::${AWS::AccountId}:role/P0RoleIamManager" }
             },
             {
               "Sid": "P0CanNotCreateSshUserProvisioningDocument",
@@ -234,7 +230,7 @@
               "Action": [
                 "ssm:CreateDocument"
               ],
-              "Resource": { "Fn::Sub": "arn:aws:ssm:*:${AwsAccountId}:document/P0ProvisionUserAccess" }
+              "Resource": { "Fn::Sub": "arn:aws:ssm:*:${AWS::AccountId}:document/P0ProvisionUserAccess" }
             },
             {
               "Sid": "P0CanNotAssumeRoles",

@@ -1,0 +1,8 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Template to create a local index for AWS Resource Explorer.
+
+Resources:
+  ResourceExplorerLocalIndex:
+    Type: AWS::ResourceExplorer2::Index
+    Properties:
+      Type: LOCAL
