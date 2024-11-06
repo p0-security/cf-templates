@@ -1,0 +1,8 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Template to create an aggregator index for AWS Resource Explorer.
+
+Resources:
+  ResourceExplorerAggregatorIndex:
+    Type: AWS::ResourceExplorer2::Index
+    Properties:
+      Type: AGGREGATOR
