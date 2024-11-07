@@ -38,7 +38,6 @@ Please copy the current directory to your local instance and execute the followi
     5. Submit
 
 
-
 > [!CAUTION]
 > The work below is in progress
 
