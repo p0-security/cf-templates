@@ -1,17 +1,15 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >
-  CloudFormation template to create the IAM role P0RoleIamResourceLister
+  StackSet template to create the IAM role P0RoleIamResourceLister
   with an inline policy P0RoleIamResourceListerPolicy.
 
 Parameters:
   GoogleAudienceId:
     Type: String
     Description: Google Audience ID for SAML federation.
-    Default: '102346994864456724606'
   TargetAccountId:
     Type: String
     Description: AWS Account ID for the aws:ResourceAccount condition.
-    Default: '060795910322'
 
 Resources:
   P0RoleIamResourceLister:
@@ -43,7 +41,7 @@ Resources:
                 Resource: '*'
                 Condition:
                   StringEquals:
-                    aws:ResourceAccount: !Ref TargetAccountId
+                    aws:ResourceAccount: !Sub "${AWS::AccountId}"
       Tags:
         - Key: P0Security
-          Value: !Sub 'Created using CloudFormation by ${AWS::AccountId}'
+          Value: !Sub 'Created using StackSet by ${AWS::AccountId}'
