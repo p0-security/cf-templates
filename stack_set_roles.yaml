@@ -1,0 +1,69 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: >
+  CloudFormation template to create IAM roles for AWS CloudFormation StackSets with self-managed permissions.
+
+Resources:
+
+  # Administration Role with Custom Policy
+  StackSetAdministrationRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: AWSCloudFormationStackSetAdministrationRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudformation.amazonaws.com
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: StackSetAdministrationPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'cloudformation:CreateStackSet'
+                  - 'cloudformation:UpdateStackSet'
+                  - 'cloudformation:DeleteStackSet'
+                  - 'cloudformation:CreateStackInstances'
+                  - 'cloudformation:UpdateStackInstances'
+                  - 'cloudformation:DeleteStackInstances'
+                  - 'cloudformation:Describe*'
+                  - 'cloudformation:List*'
+                  - 'cloudformation:StopStackSetOperation'
+                Resource: '*'
+      Tags:
+        - Key: Purpose
+          Value: StackSetAdministration
+
+  # Execution Role with Custom Policy
+  StackSetExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: AWSCloudFormationStackSetExecutionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              AWS: !GetAtt StackSetAdministrationRole.Arn
+            Action: 'sts:AssumeRole'
+      Policies:
+        - PolicyName: StackSetExecutionPolicy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - 'cloudformation:*'
+                  - 'resource-explorer-2:GetIndex'
+                  - 'resource-explorer-2:CreateIndex'
+                  - 'resource-explorer-2:DeleteIndex'
+                  - 'resource-explorer-2:UpdateIndexType'
+                  - 'resource-explorer-2:TagResource'
+                  - 'resource-explorer-2:UntagResource'
+                Resource: '*'
+      Tags:
+        - Key: Purpose
+          Value: StackSetExecution

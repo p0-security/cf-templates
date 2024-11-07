@@ -1,99 +1,103 @@
 # cf-templates
 Cloudformation templates for AWS Integration with P0 Security
 
-Please copy the current directory to your local instance and execute the following commands using this folder as your working directory.
+Summary: We will be using a cloudformation template to deploy a stackset in order to create an IAM Role 
+for P0 across all children accounts for an organization. Individual stacks will be deployed to a single 
+region across all the children accounts. 
+
+In order to cover the management account, we will then be deploying a stack manually via the same stackset 
+to target the management account and create the same IAM Role for P0.
+
+Instructions: 
+Please copy the current directory to your local instance and execute the following using the AWS Console
 
 # Step 1:   Create P0-IAMRole
 
 ## Create IAMRole stack-set
 
-1. Deploy the `iam_management.json` template as a stackset via the Management/Parent account across all children accounts. 
-  a. Pick all the children accounts to deploy the Role to. [Note: this will not get deployed in the management account]
-  b. Pick any one region to deploy the stack to. 
+#### For children accounts in an organization: 
 
-2. Deploy the `iam_management.json` template as a stack just for the Management account. 
+1. AWS -> Management Account -> Cloudformation -> StackSets
+2. Create StackSet 
+    1. Service-managed permissions
+    2. Upload the `iam_management.json` template 
+    3. Provide a StackSet name like `P0IAMRoleStackSet`
+    4. Enter Google Audience ID for P0
+    5. Deploy New stacks
+    6. Deploy to organization (This will ONLY deploy to children accounts)
+    7. Pick a single active region aka `us-west-2`
+    8. Submit 
+
+#### For the management account in the organization
+1. AWS -> Management Account -> Cloudformation -> Stack
+2. Create stack with new resources
+    1. Choose an existing template
+    2. Upload the `iam_management.json` template
+    3. Provide a Stack name like `P0IAMRoleStack`
+    4. Enter the Google Audience ID for P0
+    5. Submit
 
 
-Commands to deploy it across all children accounts: 
-```
-aws cloudformation create-stack-set \
-  --stack-set-name P0IamRoleStackSet \
-  --template-body file://iam_management.json \
-  --parameters ParameterKey=GoogleAudienceId,ParameterValue=<your-google-audience-id> \
-  --capabilities CAPABILITY_NAMED_IAM \
-  --permission-model SERVICE_MANAGED \
-  --auto-deployment Enabled=true,RetainStacksOnAccountRemoval=false
-```
+> [!CAUTION]
+> The work below is in progress
 
-```
-aws cloudformation create-stack-instances \
-  --stack-set-name P0IamRoleStackSet \
-  --deployment-targets AccountIds='["111122223333","444455556666","777788889999"]' \
-  --regions us-west-2
-```
 
-#### Cleanup (Only if required):
+# Step 2: Create Resource Explorer Default View
 
-```
-aws cloudformation delete-stack-instances \
-  --stack-set-name P0IamRoleStackSet \
-  --regions us-east-1 \
-  --deployment-targets AccountIds='["123456789012","234567890123","345678901234"]' \
-  --no-retain-stacks \
-  --operation-preferences FailureToleranceCount=1,MaxConcurrentCount=2
-```
+Cloudformation templates for a Default View in the Resource Explorer with P0 Security
 
-```
-aws cloudformation delete-stack-set \
-  --stack-set-name P0IamRoleStackSet
-```
+Summary: For execution, we'll be creating 2 roles via a cloudformation template and then we will be 
+using 4 cloudformation stacksets two with self-managed permissions and two with service-managed 
+permissions. 
 
-# Step 2: Create aggregator index
+For the management account:
+1. We'll create a resource lister role for P0 to leverage
+2. We'll create an administration and an execution role for cloudformation
+3. We'll use these roles to deploy local indexes across all regions except one. 
+4. We'll use the same roles to deploy one aggregator index across a single region (us-west-2)
 
+For the children accounts:
+1. We'll create a resource lister role for P0 to leverage
+2. We'll use service-managed permissions to deploy local indexes across all regions except one 
+for all the children accounts. 
+3. We'll use service-managed permissions to deploy an aggregator index across one region (us-west-2) 
+across all the children accounts.
+
+
+
+
+Instructions: 
+Please copy the current directory to your local instance and execute the following using the AWS Console
 
 ## A. Create Resource Explorer Index Stack 
 
-```
-    aws cloudformation create-stack-set \
-    --stack-set-name ResourceExplorerIndexStackSet \
-    --template-body "file://$(pwd)/resource_explorer_index.json" \
-    --capabilities CAPABILITY_NAMED_IAM
-```
+#### 1. Create Resource Lister Role for P0 for children accounts
 
-## B. Create CloudFormation admin and execution role and add to Administrator Access Policy
-
-
-```
-aws cloudformation deploy \
-  --template-file create_stackset_roles.json \
-  --stack-name StackSetAdminRoleStack \
-  --capabilities CAPABILITY_NAMED_IAM
-```
+1. AWS -> Cloudformation -> StackSets
+2. Create a new stackset using the 'iam_resource_lister.yaml` template
+    a. Use service-managed permissions
+    b. Upload the `iam_resource_lister.yaml` template
+    c. Provide a StackSet name like `P0IAMRoleListerStackSet`
+    d. Enter Google Audience ID for P0
+    e. Enter TargetAccountID as the parent Account ID (the value doesn't really matter, it'll be overridden)
+    f. Deploy new stacks
+    g. Deploy to organization
+    h. Specify a single region (us-west-2), its not relevant as the IAM role will be global
+    i. Submit
 
 
-## C. Deploy the StackSet instances across all active regions except us-west-2 (we'll use us-west-2 as our aggregator index)
-```
-aws cloudformation create-stack-instances \
-    --stack-set-name ResourceExplorerIndexStackSet \
-    --regions $(aws account list-regions --output text --query 'Regions[?(RegionOptStatus!=`DISABLED` && RegionOptStatus!=`DISABLING` && RegionName!=`us-west-2`)].RegionName') \
-    --accounts <aws-account-id>
-```
+#### 2. Create Resource Lister Role for P0 for management account
 
-Check if an aggregator already exists
-```
-./check_aggregator.sh
-```
+1. AWS -> Cloudformation -> Stack
+2. Create a new stack using existing resources
+  a. Choose an existing template
+  b. Upload the `iam_resource_lister.yaml` template
+  c. Provide a Stack name like `P0IAMRoleListerStack`
+  d. Enter Google Audience ID for P0
+  e. Enter TargetAccountID as the parent Account ID
+  f. Submit
 
-
-## D. Create index in us-west-2 as an aggregator
-
-```
-aws cloudformation create-stack-instances \
-    --stack-set-name ResourceExplorerIndexStackSet \
-    --accounts <aws-account-id> \
-    --regions us-west-2 \
-    --parameter-overrides ParameterKey=IndexType,ParameterValue=AGGREGATOR
-```
+## B. Create Resource Explorer Local Index Stack Set
 
 ## E. Create default view in the aggregator index
 
