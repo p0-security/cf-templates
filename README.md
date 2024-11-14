@@ -75,88 +75,107 @@ Please copy the current directory to your local instance and execute the followi
 
 1. AWS -> Cloudformation -> StackSets
 2. Create a new stackset using the 'iam_resource_lister.yaml` template
-    a. Use service-managed permissions
-    b. Upload the `iam_resource_lister.yaml` template
-    c. Provide a StackSet name like `P0IAMRoleListerStackSet`
-    d. Enter Google Audience ID for P0
-    e. Enter TargetAccountID as the parent Account ID (the value doesn't really matter, it'll be overridden)
-    f. Deploy new stacks
-    g. Deploy to organization
-    h. Specify a single region (us-west-2), its not relevant as the IAM role will be global
-    i. Submit
+    1. Use service-managed permissions
+    2. Upload the `iam_resource_lister.yaml` template
+    3. Provide a StackSet name like `P0IAMRoleListerStackSet`
+    4. Enter Google Audience ID for P0
+    5. Enter TargetAccountID as the parent Account ID (the value doesn't really matter, it'll be overridden)
+    6. Deploy new stacks
+    7. Deploy to organization
+    8. Specify a single region (us-west-2), its not relevant as the IAM role will be global
+    9. Submit
 
 
 #### 2. Create Resource Lister Role for P0 for management account
 
 1. AWS -> Cloudformation -> Stack
 2. Create a new stack using existing resources
-  a. Choose an existing template
-  b. Upload the `iam_resource_lister.yaml` template
-  c. Provide a Stack name like `P0IAMRoleListerStack`
-  d. Enter Google Audience ID for P0
-  e. Enter TargetAccountID as the parent Account ID
-  f. Submit
+  1. Choose an existing template
+  2. Upload the `iam_resource_lister.yaml` template
+  3. Provide a Stack name like `P0IAMRoleListerStack`
+  4. Enter Google Audience ID for P0
+  5. Enter TargetAccountID as the parent Account ID
+  6. Submit
 
-## B. Create Resource Explorer Local Index Stack Set
+## B. Create Resource Explorer Local Indexes for children accounts
 
-## E. Create default view in the aggregator index
+1. AWS -> Cloudformation -> StackSets
+2. Create a new stackset 
+    1. Use service-managed permissions
+    2. Upload the `resource_explorer_local_index.yaml` template
+    3. Provide a StackSet name like `LocalIndexStackSetForChildAccounts`
+    4. Deploy new stacks
+    5. Deploy to organization
+    6. Specify all active regions except one (which will be used for the aggregator index, we can use us-west-2 as the exception)
+    7. Submit
 
-```
-aws cloudformation deploy \
-  --template-file resource_explorer_view.yaml \
-  --stack-name ResourceExplorerViewStack \
-  --capabilities CAPABILITY_NAMED_IAM \
-  --region your-aggregator-region \
-  --parameter-overrides AggregatorRegion=your-aggregator-region
-```
+## C. Create Resource Explorer Local Indexes for the management account
 
-If you want to use the default (us-west-2) region:
-```
-aws cloudformation deploy \
-  --template-file resource_explorer_view.yaml \
-  --stack-name ResourceExplorerViewStack \
-  --capabilities CAPABILITY_NAMED_IAM \
-  --region us-west-2
-```
+1. We'll be creating new IAM roles to use for self-managed permissions for the CF templates.
+2. AWS -> Cloudformation -> Stacks
+3. Create a new stack using existing resources
+  1. Choose an existing template
+  2. Upload the `stack_set_roles.yaml` template
+  3. Provide a Stack Name like `StackSetRoles`
+  4. Submit
+4. Now we'll create the local indexes in the management account
+5. AWS -> Cloudformation -> StackSets
+6. Create a new stack set 
+  1. Use self-service permissions
+  2. Use IAM admin role created in step 3 - `AWSCloudFormationStackSetAdministrationRole`
+  3. Use IAM execution role created in step 3  - `AWSCloudFormationStackSetExecutionRole`
+  4. Upload same template from Step B.2 - `resource_explorer_local_index.yaml`
+  5. Provide a StackSet name like `LocalIndexStackSetForParentAccount`
+  6. Deploy stack sets in accounts: Put in the management account ID
+  7. Specify all active regions except one (which will be used for the aggregator index, we can use us-west-2 as the exception)
+  8. Submit
 
-## F. Create a new role that allows referencing the indexes
-```
-aws cloudformation deploy \
-  --template-file Iam_resource_lister.yaml \
-  --stack-name P0RoleIamResourceListerStack \
-  --capabilities CAPABILITY_NAMED_IAM \
-  --parameter-overrides \
-    GoogleAudienceId=<goog-aud-id> \
-    TargetAccountId=<aws-acccount-id>
-```
+## D. Create Resource Explorer Aggregator Index for children accounts
 
+1. AWS -> Cloudformation -> StackSets
+2. Create a new stackset 
+    1. Use service-managed permissions
+    2. Upload the `resource_explorer_aggregator_index.yaml` template
+    3. Provide a StackSet name like `AggregatorIndexStackSetForChildAccounts`
+    4. Deploy new stacks
+    5. Deploy to organization
+    6. Specify the excluded active region from Step B.2.h (e.g. us-west-2)
+    7. Submit
 
-#### Cleanup (only if required):
+## E. Create Resource Explorer Aggregator Index for the management account
 
-##### Delete Resource Explorer View:
-```
-aws cloudformation delete-stack \
-  --stack-name ResourceExplorerViewStack \
-  --region us-west-2
-```
+1. We'll be using the same IAM roles as in Step C.3
+2. AWS -> Cloudformation -> StackSets
+3. Create a new stack set 
+  1. Use self-service permissions
+  2. Use IAM admin role created in step C.3 - `AWSCloudFormationStackSetAdministrationRole`
+  3. Use IAM execution role created in step C.3  - `AWSCloudFormationStackSetExecutionRole`
+  4. Upload same template from Step D.2 - `resource_explorer_aggregator_index.yaml`
+  5. Provide a StackSet name like `AggregatorIndexStackSetForParentAccount`
+  6. Deploy stack sets in accounts: Put in the management account ID
+  7. Specify the excluded active region from Step C.6.vii (e.g. us-west-2)
+  8. Submit
 
-##### Delete Stack Instances:
-```
-aws cloudformation delete-stack-instances \
-  --stack-set-name ResourceExplorerIndexStackSet \
-  --regions $(aws account list-regions --output text --query 'Regions[?(RegionOptStatus!=`DISABLED` && RegionOptStatus!=`DISABLING`)].RegionName') \
-  --accounts <aws-account-id> \
-  --no-retain-stacks
-```
+## F. Create default view in the aggregator index for children accounts
 
-##### Delete Stack Set:
-```
-aws cloudformation delete-stack-set \
-    --stack-set-name ResourceExplorerIndexStackSet
-```
+1. AWS -> Cloudformation -> StackSets
+2. Create a new stackset 
+    1. Use service-managed permissions
+    2. Upload the `resource_explorer_view.yaml` template
+    3. Provide a StackSet name like `ResourceExplorerViewStackSetForChildAccounts`
+    4. Set aggregator region to `us-west-2`
+    5. Deploy new stacks
+    6. Deploy to organization
+    7. Specify the same aggregator region as Step D.2.vi
+    8. Submit
 
-##### Delete Admin and Exec Roles:
-```
-aws cloudformation delete-stack \
-  --stack-name StackSetAdminRoleStack
-```
+## G. Create default view in the aggregator index for the management account
+
+1. AWS -> Cloudformation -> Stacks
+2. Create a new stack using existing resources
+  1. Choose an existing template
+  2. Upload the `resource_explorer_view.yaml` template
+  3. Provide a Stack name like `ResourceExplorerViewStack`
+  4. Specify the aggregator region as Step E.3.vii (us-west-2)
+  5. Enter TargetAccountID as the parent Account ID
+  6. Submit
