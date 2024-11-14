@@ -54,13 +54,13 @@ For the management account:
 1. We'll create a resource lister role for P0 to leverage
 2. We'll create an administration and an execution role for cloudformation
 3. We'll use these roles to deploy local indexes across all regions except one. 
-4. We'll use the same roles to deploy one aggregator index across a single region (us-west-2)
+4. We'll use the same roles to deploy one aggregator index across a single region (`us-west-2`)
 
 For the children accounts:
 1. We'll create a resource lister role for P0 to leverage
 2. We'll use service-managed permissions to deploy local indexes across all regions except one 
 for all the children accounts. 
-3. We'll use service-managed permissions to deploy an aggregator index across one region (us-west-2) 
+3. We'll use service-managed permissions to deploy an aggregator index across one region (`us-west-2`) 
 across all the children accounts.
 
 
@@ -106,7 +106,7 @@ Please copy the current directory to your local instance and execute the followi
     3. Provide a StackSet name like `LocalIndexStackSetForChildAccounts`
     4. Deploy new stacks
     5. Deploy to organization
-    6. Specify all active regions except one (which will be used for the aggregator index, we can use us-west-2 as the exception)
+    6. Specify all active regions except one (which will be used for the aggregator index, we can use `us-west-2` as the exception)
     7. Submit
 
 ## C. Create Resource Explorer Local Indexes for the management account
@@ -127,7 +127,7 @@ Please copy the current directory to your local instance and execute the followi
     4. Upload same template from Step B.2 - `resource_explorer_local_index.yaml`
     5. Provide a StackSet name like `LocalIndexStackSetForParentAccount`
     6. Deploy stack sets in accounts: Put in the management account ID
-    7. Specify all active regions except one (which will be used for the aggregator index, we can use us-west-2 as the exception)
+    7. Specify all active regions except one (which will be used for the aggregator index, we can use `us-west-2` as the exception)
     8. Submit
 
 ## D. Create Resource Explorer Aggregator Index for children accounts
@@ -176,6 +176,6 @@ Please copy the current directory to your local instance and execute the followi
     1. Choose an existing template
     2. Upload the `resource_explorer_view.yaml` template
     3. Provide a Stack name like `ResourceExplorerViewStack`
-    4. Specify the aggregator region as Step E.3.vii (us-west-2)
+    4. Specify the aggregator region as Step E.3.vii (`us-west-2`)
     5. Enter TargetAccountID as the parent Account ID
     6. Submit
