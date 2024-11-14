@@ -38,38 +38,7 @@ Please copy the current directory to your local instance and execute the followi
     5. Submit
 
 
-> [!CAUTION]
-> The work below is in progress
-
-
 # Step 2: Create Resource Explorer Default View
-
-Cloudformation templates for a Default View in the Resource Explorer with P0 Security
-
-Summary: For execution, we'll be creating 2 roles via a cloudformation template and then we will be 
-using 4 cloudformation stacksets two with self-managed permissions and two with service-managed 
-permissions. 
-
-For the management account:
-1. We'll create a resource lister role for P0 to leverage
-2. We'll create an administration and an execution role for cloudformation
-3. We'll use these roles to deploy local indexes across all regions except one. 
-4. We'll use the same roles to deploy one aggregator index across a single region (`us-west-2`)
-
-For the children accounts:
-1. We'll create a resource lister role for P0 to leverage
-2. We'll use service-managed permissions to deploy local indexes across all regions except one 
-for all the children accounts. 
-3. We'll use service-managed permissions to deploy an aggregator index across one region (`us-west-2`) 
-across all the children accounts.
-
-
-
-
-Instructions: 
-Please copy the current directory to your local instance and execute the following using the AWS Console
-
-## A. Create Resource Explorer Index Stack 
 
 #### 1. Create Resource Lister Role for P0 for children accounts
 
